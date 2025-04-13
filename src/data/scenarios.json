@@ -1,0 +1,40 @@
+{
+  "2025-04-08": {
+    "choices": [
+      {
+        "id": 1,
+        "text": "Lakers are playing!! Put all your cash on LeSunshine's over!!",
+        "effect": "💸 Capital -$20K",
+        "image": "/lebron.jpg"
+      },
+      {
+        "id": 2,
+        "text": "Download CapCut and talk about the grindset. Full PodBro arc.",
+        "effect": "📈 Morale +5",
+        "image": "/podcast.jpg"
+      },
+      {
+        "id": 3,
+        "text": "Sexy car wash by yourself. Pain.",
+        "effect": "💧 Morale +5",
+        "image": "/carwash.jpg"
+      },
+      {
+        "id": 4,
+        "text": "Alley barbershop. Bring your mom’s Dyson.",
+        "effect": "💵 Capital +$300",
+        "image": "/barbershop.jpg"
+      }
+    ]
+  },
+  "default": {
+    "choices": [
+      {
+        "id": 0,
+        "text": "Scenario loading or missing. Please refresh later.",
+        "effect": "🛠️ Standby...",
+        "image": "/placeholder.jpg"
+      }
+    ]
+  }
+}
