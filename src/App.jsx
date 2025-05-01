@@ -7,13 +7,13 @@ export default function App() {
  
   const [scenario, setScenario]  = useState(null);
   const [selected, setSelected]  = useState(null);
-  const [theme,    setTheme]     = useState("cutie");
+  const [theme,    setTheme]     = useState("cutie");  // cutie | grindset
   const [loading,  setLoading]   = useState(true);
   const [error,    setError]     = useState("");
   const [isLandscape, setIsLandscape] = useState(
     typeof window !== "undefined" &&
     (window.innerWidth > 768 || window.innerHeight < window.innerWidth)
-  );                                // ⚡️ new
+  );
 
  
   useEffect(() => {
@@ -33,8 +33,9 @@ export default function App() {
       window.removeEventListener("resize", handler);
       window.removeEventListener("orientationchange", handler);
     };
-  }, []);                           // ⚡️ new
+  }, []);
 
+ 
   const isGrind = theme === "grindset";
   const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
 
@@ -65,7 +66,7 @@ export default function App() {
         <p>{scenario.prompt}</p>
       </section>
 
-      {/* vote grid or result */}
+      {/* vote grid OR result */}
       {selected === null ? (
         <div className="grid grid-cols-2 gap-3 w-full max-w-md">
           {scenario.options.map((opt, idx) => (
@@ -73,14 +74,17 @@ export default function App() {
               key={idx}
               onClick={() => setSelected(idx)}
               className="relative h-40 rounded-lg overflow-hidden shadow hover:scale-105 transition"
-              style={{ backgroundImage: `url(${opt.image})`,
-                       backgroundSize: "cover",
-                       backgroundPosition: "center" }}
+              style={{
+                backgroundImage: `url(${opt.image})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center"
+              }}
             >
               <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
                 <span className="text-white text-center text-sm leading-snug">
                   {opt.text}
-                  <br /><span className="text-xs opacity-80">{opt.effect}</span>
+                  <br />
+                  <span className="text-xs opacity-80">{opt.effect}</span>
                 </span>
               </div>
             </button>
@@ -100,12 +104,24 @@ export default function App() {
         </div>
       )}
 
-      {/* flipvertising sidebar */}
+      {/* -------- Flipvertising™ sidebar -------- */}
       {isLandscape && (
         <aside className="fixed right-0 top-0 w-64 h-screen bg-white shadow-lg p-4 border-l border-gray-300 z-50 text-black">
+          {/* guilt-trip line */}
           <p className="text-sm font-medium text-red-500 mb-2">{scenario.guiltTrip}</p>
-          {scenario.ad && <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />}
-          <p className="text-xs text-center text-gray-600">{scenario.thankYou}</p>
+
+          {/* ad creative */}
+          {scenario.ad && (
+            <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />
+          )}
+
+          {/* daily thanks */}
+          <p className="text-xs text-center text-gray-600 mb-1">{scenario.thankYou}</p>
+
+          {/* powered-by tagline */}
+          <p className="text-[10px] text-center text-gray-400">
+            Powered&nbsp;by&nbsp;<span className="italic">Flipvertising™</span>
+          </p>
         </aside>
       )}
     </div>
