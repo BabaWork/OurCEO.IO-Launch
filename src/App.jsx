@@ -2,19 +2,18 @@ import React, { useEffect, useState } from "react";
 import { fetchTodayScenario, submitVote } from "./utils/fetchTodayScenario";
 import "./index.css";
 
-/* ---------- CONFIG ---------- */
+
 const INSTAGRAM_URL = "https://www.instagram.com/flipvertising?igsh=cWVoYjVrN3liOGg3; 
-/* ---------------------------- */
+
 
 export default function App() {
-  /* ----------- state ---------- */
+
   const [scenario, setScenario] = useState(null);
   const [isLandscape, setIsLandscape] = useState(
     window.matchMedia("(orientation: landscape)").matches
   );
   const [hasVoted, setHasVoted] = useState(false);
 
-  /* ----------- hooks ---------- */
   useEffect(() => {
     fetchTodayScenario().then(setScenario);
 
@@ -25,7 +24,7 @@ export default function App() {
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  /* ----------- render helper ---------- */
+
   if (!scenario)
     return (
       <div className="h-screen flex items-center justify-center text-lg">
@@ -35,7 +34,7 @@ export default function App() {
 
   const { body, choices, ad, thankYou, guiltTrip } = scenario;
 
-  /* ----------- JSX ---------- */
+
   return (
     <div className="min-h-screen flex flex-col items-center pt-6 pb-24 sm:pb-8 px-4 text-center">
       {/* --- HEADER --- */}
