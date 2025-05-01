@@ -5,31 +5,42 @@ import logoDark  from "/logo-grindset.png";
 
 export default function App() {
  
-  const [scenario, setScenario]   = useState(null);
-  const [selected, setSelected]   = useState(null);   // index of choice
-  const [theme,    setTheme]      = useState("cutie"); // cutie | grindset
-  const [loading,  setLoading]    = useState(true);
-  const [error,    setError]      = useState("");
+  const [scenario, setScenario]  = useState(null);
+  const [selected, setSelected]  = useState(null);
+  const [theme,    setTheme]     = useState("cutie");
+  const [loading,  setLoading]   = useState(true);
+  const [error,    setError]     = useState("");
+  const [isLandscape, setIsLandscape] = useState(
+    typeof window !== "undefined" &&
+    (window.innerWidth > 768 || window.innerHeight < window.innerWidth)
+  );                                // ⚡️ new
 
  
   useEffect(() => {
     fetchTodayScenario()
-      .then(data => setScenario(data))
-      .catch(err  => setError(err.message || "API error"))
+      .then(setScenario)
+      .catch(err => setError(err.message || "API error"))
       .finally(() => setLoading(false));
   }, []);
 
  
-  const isGrind = theme === "grindset";
-  const isWide  = typeof window !== "undefined"
-                  && (window.innerWidth > 768 || window.innerHeight < window.innerWidth);
+  useEffect(() => {
+    const handler = () =>
+      setIsLandscape(window.innerWidth > 768 || window.innerHeight < window.innerWidth);
+    window.addEventListener("resize", handler);
+    window.addEventListener("orientationchange", handler);
+    return () => {
+      window.removeEventListener("resize", handler);
+      window.removeEventListener("orientationchange", handler);
+    };
+  }, []);                           // ⚡️ new
 
+  const isGrind = theme === "grindset";
   const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
 
  
   if (loading) return <div className="h-screen flex items-center justify-center">Loading…</div>;
-  if (error   || !scenario)
-    return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
+  if (error || !scenario) return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
 
  
   return (
@@ -62,17 +73,14 @@ export default function App() {
               key={idx}
               onClick={() => setSelected(idx)}
               className="relative h-40 rounded-lg overflow-hidden shadow hover:scale-105 transition"
-              style={{
-                backgroundImage: `url(${opt.image})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center"
-              }}
+              style={{ backgroundImage: `url(${opt.image})`,
+                       backgroundSize: "cover",
+                       backgroundPosition: "center" }}
             >
               <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
                 <span className="text-white text-center text-sm leading-snug">
                   {opt.text}
-                  <br className="hidden sm:block" />
-                  <span className="text-xs opacity-80">{opt.effect}</span>
+                  <br /><span className="text-xs opacity-80">{opt.effect}</span>
                 </span>
               </div>
             </button>
@@ -85,7 +93,7 @@ export default function App() {
           <p className="text-green-500 font-medium">{scenario.thankYou}</p>
           <p className="text-xs opacity-60">
             Today’s charity:&nbsp;
-            <a href={scenario.charityLink} target="_blank" className="underline">
+            <a href={scenario.charityLink} target="_blank" rel="noreferrer" className="underline">
               {scenario.charity}
             </a>
           </p>
@@ -93,12 +101,10 @@ export default function App() {
       )}
 
       {/* flipvertising sidebar */}
-      {isWide && (
+      {isLandscape && (
         <aside className="fixed right-0 top-0 w-64 h-screen bg-white shadow-lg p-4 border-l border-gray-300 z-50 text-black">
           <p className="text-sm font-medium text-red-500 mb-2">{scenario.guiltTrip}</p>
-          {scenario.ad && (
-            <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />
-          )}
+          {scenario.ad && <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />}
           <p className="text-xs text-center text-gray-600">{scenario.thankYou}</p>
         </aside>
       )}
