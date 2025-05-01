@@ -1,127 +1,111 @@
 import React, { useEffect, useState } from "react";
-import { fetchTodayScenario } from "./utils/fetchTodayScenario";
-import logoLight from "/logo-light.png";
-import logoDark  from "/logo-grindset.png";
+import { fetchTodayScenario, submitVote } from "./utils/fetchTodayScenario";
+import "./index.css";
+
+/* ---------- CONFIG ---------- */
+const INSTAGRAM_URL = "https://www.instagram.com/flipvertising?igsh=cWVoYjVrN3liOGg3; 
+/* ---------------------------- */
 
 export default function App() {
- 
-  const [scenario, setScenario]  = useState(null);
-  const [selected, setSelected]  = useState(null);
-  const [theme,    setTheme]     = useState("cutie");  // cutie | grindset
-  const [loading,  setLoading]   = useState(true);
-  const [error,    setError]     = useState("");
+  /* ----------- state ---------- */
+  const [scenario, setScenario] = useState(null);
   const [isLandscape, setIsLandscape] = useState(
-    typeof window !== "undefined" &&
-    (window.innerWidth > 768 || window.innerHeight < window.innerWidth)
+    window.matchMedia("(orientation: landscape)").matches
   );
+  const [hasVoted, setHasVoted] = useState(false);
 
- 
+  /* ----------- hooks ---------- */
   useEffect(() => {
-    fetchTodayScenario()
-      .then(setScenario)
-      .catch(err => setError(err.message || "API error"))
-      .finally(() => setLoading(false));
+    fetchTodayScenario().then(setScenario);
+
+    /* orientation listener */
+    const mql = window.matchMedia("(orientation: landscape)");
+    const onChange = (e) => setIsLandscape(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
   }, []);
 
- 
-  useEffect(() => {
-    const handler = () =>
-      setIsLandscape(window.innerWidth > 768 || window.innerHeight < window.innerWidth);
-    window.addEventListener("resize", handler);
-    window.addEventListener("orientationchange", handler);
-    return () => {
-      window.removeEventListener("resize", handler);
-      window.removeEventListener("orientationchange", handler);
-    };
-  }, []);
+  /* ----------- render helper ---------- */
+  if (!scenario)
+    return (
+      <div className="h-screen flex items-center justify-center text-lg">
+        Loading…
+      </div>
+    );
 
- 
-  const isGrind = theme === "grindset";
-  const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
+  const { body, choices, ad, thankYou, guiltTrip } = scenario;
 
- 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading…</div>;
-  if (error || !scenario) return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
-
- 
+  /* ----------- JSX ---------- */
   return (
-    <div className={`${isGrind ? "bg-gray-900 text-white" : "bg-pink-50 text-black"} min-h-screen flex flex-col items-center p-4`}>
+    <div className="min-h-screen flex flex-col items-center pt-6 pb-24 sm:pb-8 px-4 text-center">
+      {/* --- HEADER --- */}
+      <h1 className="text-3xl font-bold mb-6">CEO.IO</h1>
 
-      {/* header */}
-      <header className="w-full max-w-md mb-4 flex items-center justify-between">
-        <img src={isGrind ? logoDark : logoLight} className="h-10" />
-        <button
-          onClick={toggleTheme}
-          className={`px-3 py-1 rounded text-sm font-semibold shadow transition ${
-            isGrind ? "bg-white text-gray-900" : "bg-gray-900 text-white"
-          }`}
-        >
-          Switch to {isGrind ? "Cutie" : "Grindset"}
-        </button>
-      </header>
+      {/* --- STORY BODY --- */}
+      <p className="max-w-md text-sm leading-relaxed mb-6 whitespace-pre-line">
+        {body}
+      </p>
 
-      {/* prompt */}
-      <section className={`w-full max-w-md mb-5 p-4 rounded-xl shadow border ${isGrind ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-        <h2 className="font-semibold mb-1">📣 Today’s Scenario</h2>
-        <p>{scenario.prompt}</p>
-      </section>
+      {/* --- VOTE GRID --- */}
+      <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+        {choices.map((c, idx) => (
+          <button
+            key={idx}
+            disabled={hasVoted}
+            className="relative aspect-square rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+            onClick={() => {
+              submitVote(idx);
+              setHasVoted(true);
+            }}
+          >
+            {/* bg image */}
+            <img
+              src={c.image}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* overlay */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-2">
+              <span className="text-xs font-semibold leading-tight">
+                {c.text}
+              </span>
+              <span className="text-emerald-400 text-xs mt-1">{c.effect}</span>
+            </div>
+          </button>
+        ))}
+      </div>
 
-      {/* vote grid OR result */}
-      {selected === null ? (
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-          {scenario.options.map((opt, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelected(idx)}
-              className="relative h-40 rounded-lg overflow-hidden shadow hover:scale-105 transition"
-              style={{
-                backgroundImage: `url(${opt.image})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center"
-              }}
-            >
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
-                <span className="text-white text-center text-sm leading-snug">
-                  {opt.text}
-                  <br />
-                  <span className="text-xs opacity-80">{opt.effect}</span>
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center space-y-3 max-w-md">
-          <p className="text-xl font-bold">{scenario.options[selected].effect}</p>
-          <p className="italic text-sm opacity-70">{scenario.options[selected].feedback}</p>
-          <p className="text-green-500 font-medium">{scenario.thankYou}</p>
-          <p className="text-xs opacity-60">
-            Today’s charity:&nbsp;
-            <a href={scenario.charityLink} target="_blank" rel="noreferrer" className="underline">
-              {scenario.charity}
-            </a>
-          </p>
-        </div>
+      {/* --- GUILT-TRIP (portrait only) --- */}
+      {!isLandscape && (
+        <p className="text-xs text-neutral-400 mt-5 max-w-xs">
+          {guiltTrip} <br />
+          <span className="italic">Rotate your phone&nbsp;↻</span>
+        </p>
       )}
 
-      {/* -------- Flipvertising™ sidebar -------- */}
+      {/* --- SIDEBAR AD (landscape only, floats right in CSS) --- */}
       {isLandscape && (
-        <aside className="fixed right-0 top-0 w-64 h-screen bg-white shadow-lg p-4 border-l border-gray-300 z-50 text-black">
-          {/* guilt-trip line */}
-          <p className="text-sm font-medium text-red-500 mb-2">{scenario.guiltTrip}</p>
+        <aside className="fixed right-2 top-24 w-52">
+          {/* real or placeholder ad */}
+          <a
+            href={ad}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block border border-neutral-700 rounded-md overflow-hidden"
+          >
+            <img src={ad} alt="sponsor" className="w-full" />
+          </a>
 
-          {/* ad creative */}
-          {scenario.ad && (
-            <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />
-          )}
-
-          {/* daily thanks */}
-          <p className="text-xs text-center text-gray-600 mb-1">{scenario.thankYou}</p>
-
-          {/* powered-by tagline */}
-          <p className="text-[10px] text-center text-gray-400">
-            Powered&nbsp;by&nbsp;<span className="italic">Flipvertising™</span>
-          </p>
+          {/* thank-you & branding */}
+          <p className="text-xs text-neutral-400 mt-1">{thankYou}</p>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-[10px] text-emerald-400 underline mt-0.5"
+          >
+            Powered by Flipvertising™
+          </a>
         </aside>
       )}
     </div>
