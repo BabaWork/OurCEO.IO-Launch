@@ -1,111 +1,107 @@
+// src/App.jsx
 import React, { useEffect, useState } from "react";
 import { fetchTodayScenario, submitVote } from "./utils/fetchTodayScenario";
 import "./index.css";
 
+// assets
+import logoLight from "/logo-light.png";
+import logoDark  from "/logo-grindset.png";
 
-const INSTAGRAM_URL = "https://www.instagram.com/flipvertising?igsh=cWVoYjVrN3liOGg3; 
-
+const FLIPVERTISING_LINK = "https://www.instagram.com/flipvertising/?utm_source=ig_web_button_share_sheet"; // 🔗 IG
 
 export default function App() {
-
+  /* ───────── state ───────── */
   const [scenario, setScenario] = useState(null);
-  const [isLandscape, setIsLandscape] = useState(
-    window.matchMedia("(orientation: landscape)").matches
-  );
-  const [hasVoted, setHasVoted] = useState(false);
+  const [voteSent, setVoteSent] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(window.matchMedia("(orientation: landscape)").matches);
 
+  /* ───────── effects ─────── */
   useEffect(() => {
-    fetchTodayScenario().then(setScenario);
+    fetchTodayScenario().then(setScenario).catch(console.error);
 
-    /* orientation listener */
-    const mql = window.matchMedia("(orientation: landscape)");
-    const onChange = (e) => setIsLandscape(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
+    const mq = window.matchMedia("(orientation: landscape)");
+    const handler = (e) => setIsLandscape(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
+  /* ───────── helpers ─────── */
+  const handleVote = async (choiceIdx) => {
+    await submitVote(choiceIdx);
+    setVoteSent(true);
+  };
 
-  if (!scenario)
+  if (!scenario) {
     return (
-      <div className="h-screen flex items-center justify-center text-lg">
+      <div className="min-h-screen flex items-center justify-center">
         Loading…
       </div>
     );
+  }
 
-  const { body, choices, ad, thankYou, guiltTrip } = scenario;
-
-
+  /* ───────── JSX ─────────── */
   return (
-    <div className="min-h-screen flex flex-col items-center pt-6 pb-24 sm:pb-8 px-4 text-center">
-      {/* --- HEADER --- */}
-      <h1 className="text-3xl font-bold mb-6">CEO.IO</h1>
+    <div className="min-h-screen flex flex-col items-center bg-black text-white p-4">
+      {/* logo */}
+      <img
+        src={isLandscape ? logoDark : logoLight}
+        alt="CEO.IO logo"
+        className="w-32 mb-3"
+      />
 
-      {/* --- STORY BODY --- */}
-      <p className="max-w-md text-sm leading-relaxed mb-6 whitespace-pre-line">
-        {body}
-      </p>
+      {/* scenario */}
+      <p className="max-w-md text-center mb-6">{scenario.body}</p>
 
-      {/* --- VOTE GRID --- */}
+      {/* vote grid */}
       <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-        {choices.map((c, idx) => (
+        {scenario.choices.slice(0, 4).map((c, idx) => (
           <button
             key={idx}
-            disabled={hasVoted}
-            className="relative aspect-square rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
-            onClick={() => {
-              submitVote(idx);
-              setHasVoted(true);
-            }}
+            onClick={() => handleVote(idx)}
+            disabled={voteSent}
+            className="relative h-28 rounded-lg overflow-hidden group"
           >
-            {/* bg image */}
             <img
               src={c.image}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition"
             />
-            {/* overlay */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-2">
-              <span className="text-xs font-semibold leading-tight">
-                {c.text}
-              </span>
-              <span className="text-emerald-400 text-xs mt-1">{c.effect}</span>
-            </div>
+            <span className="relative z-10 font-semibold text-sm px-2">
+              {c.text}
+            </span>
+            <span className="relative z-10 block text-xs mt-1 opacity-80">
+              {c.effect}
+            </span>
           </button>
         ))}
       </div>
 
-      {/* --- GUILT-TRIP (portrait only) --- */}
-      {!isLandscape && (
-        <p className="text-xs text-neutral-400 mt-5 max-w-xs">
-          {guiltTrip} <br />
-          <span className="italic">Rotate your phone&nbsp;↻</span>
-        </p>
-      )}
+      {/* guilt trip — always visible below the votes */}
+      <p className="mt-4 text-xs text-center italic opacity-90">
+        {scenario.guiltTrip} – flip your phone to feed our dev team 🍜
+      </p>
 
-      {/* --- SIDEBAR AD (landscape only, floats right in CSS) --- */}
+      {/* ad banner – only while landscape */}
       {isLandscape && (
-        <aside className="fixed right-2 top-24 w-52">
-          {/* real or placeholder ad */}
-          <a
-            href={ad}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block border border-neutral-700 rounded-md overflow-hidden"
-          >
-            <img src={ad} alt="sponsor" className="w-full" />
+        <div className="fixed top-4 right-4 w-48 shadow-lg">
+          <a href={scenario.fakeAdLink} target="_blank" rel="noreferrer">
+            <img src="/ad-banner.jpg" alt="ad" className="rounded-md" />
           </a>
-
-          {/* thank-you & branding */}
-          <p className="text-xs text-neutral-400 mt-1">{thankYou}</p>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-[10px] text-emerald-400 underline mt-0.5"
-          >
-            Powered by Flipvertising™
-          </a>
-        </aside>
+          <p className="text-[10px] text-center mt-1">
+            Sponsored • No refunds.<br />
+            Thanks for rotating 🙏
+          </p>
+          <p className="text-[10px] text-center mt-0.5">
+            <a
+              href={FLIPVERTISING_LINK}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Powered by Flipvertising™
+            </a>
+          </p>
+        </div>
       )}
     </div>
   );
