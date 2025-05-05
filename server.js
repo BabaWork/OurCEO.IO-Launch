@@ -1,9 +1,12 @@
-import express from 'express';
+import express from 'express'; 
 import { Client } from '@notionhq/client';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -26,12 +29,8 @@ app.get('/api/scenario', async (req, res) => {
     const entry = response.results[0];
     if (!entry) return res.status(404).json({ error: 'No scenario today' });
 
-    // DEBUG OUTPUT 👇
-    console.log('👉 Full Notion Entry:\n', JSON.stringify(entry.properties, null, 2));
-    console.log('👉 Scenario Field:\n', entry.properties['Scenario']);
-
     const getText = (prop) => entry.properties[prop]?.rich_text?.[0]?.plain_text || '';
-    const getUrl = (prop) => entry.properties[prop]?.url || '';
+    const getUrl  = (prop) => entry.properties[prop]?.url || '';
 
     const data = {
       prompt: getText('Scenario'),
@@ -55,6 +54,18 @@ app.get('/api/scenario', async (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log('✅ API server running at http://localhost:3001');
+/* Serve static Vite frontend from /dist */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+/* Start server */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
