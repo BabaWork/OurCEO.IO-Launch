@@ -1,116 +1,69 @@
 import React, { useEffect, useState } from "react";
-import logoLight from "/logo-light.png";
-import logoDark  from "/logo-grindset.png";
+import DailyVote from "./components/DailyVote";
+import GuiltTrip from "./components/GuiltTrip";
+import FlipAd from "./components/FlipAd";
+import "./App.css";
 
-const FLIP_LINK = "https://www.instagram.com/flipvertising";
-
-export default function App() {
+function App() {
   const [scenario, setScenario] = useState(null);
-  const [voted, setVoted]       = useState(false);
-  const [isLand, setIsLand]     = useState(
-    window.matchMedia("(orientation: landscape)").matches
-  );
-  const [theme, setTheme] = useState("cutie"); // cutie | grindset
+  const [hasVoted, setHasVoted] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
-  /* fetch scenario once */
   useEffect(() => {
     fetch("/api/scenario")
-      .then(r => r.json())
+      .then((res) => res.json())
       .then(setScenario)
       .catch(console.error);
-
-    /* orientation listener */
-    const mq = window.matchMedia("(orientation: landscape)");
-    const h  = e => setIsLand(e.matches);
-    mq.addEventListener("change", h);
-    return () => mq.removeEventListener("change", h);
   }, []);
 
-  /* vote */
-  const handleVote = async (idx) => {
-    await fetch("/api/vote", {
-      method: "POST",
-      body: JSON.stringify({ optionIndex: idx })
-    });
-    setVoted(true);
-  };
+  useEffect(() => {
+    const handleOrientation = (e) => {
+      const angle = Math.abs(window.orientation || 0);
+      const isPortrait = angle === 0 || angle === 180;
+      setIsFlipped(!isPortrait);
+    };
+
+    window.addEventListener("orientationchange", handleOrientation);
+    handleOrientation();
+
+    return () => {
+      window.removeEventListener("orientationchange", handleOrientation);
+    };
+  }, []);
 
   if (!scenario) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading…
+      <div className="loading-screen">
+        <h2>Loading today's dilemma...</h2>
       </div>
     );
   }
 
-  const isGrind = theme === "grindset";
-
   return (
-    <div
-      className={
-        `${isGrind ? "bg-gray-900 text-white" : "bg-pink-50 text-black"} ` +
-        "min-h-screen flex flex-col items-center p-4"
-      }
-    >
-      {/* header */}
-      <header className="w-full max-w-md mb-4 flex items-center justify-between">
-        <img src={isGrind ? logoDark : logoLight} className="h-10" />
-        <button
-          onClick={() => setTheme(isGrind ? "cutie" : "grindset")}
-          className={
-            `px-3 py-1 rounded text-sm font-semibold shadow ` +
-            `${isGrind ? "bg-white text-gray-900" : "bg-gray-900 text-white"}`
-          }
-        >
-          Switch to {isGrind ? "Cutie" : "Grindset"}
-        </button>
-      </header>
+    <div className="app-container">
+      <DailyVote
+        scenario={scenario}
+        hasVoted={hasVoted}
+        onVote={() => setHasVoted(true)}
+      />
 
-      {/* scenario text */}
-      <p className="max-w-md text-center mb-6 whitespace-pre-line">
-        {scenario.body}
-      </p>
+      {hasVoted && !isFlipped && <GuiltTrip />}
 
-      {/* vote grid */}
-      <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-        {scenario.choices.slice(0, 4).map((c, i) => (
-          <button
-            key={i}
-            disabled={voted}
-            onClick={() => handleVote(i)}
-            className="relative h-40 rounded-lg overflow-hidden shadow disabled:opacity-60"
-          >
-            <img
-              src={c.image}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-60"
-            />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-              <span className="text-sm font-semibold text-center">{c.text}</span>
-              <span className="text-xs opacity-80">{c.effect}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* guilt-trip always visible under grid */}
-      <p className="mt-4 text-xs text-center opacity-90">{scenario.guiltTrip}</p>
-
-      {/* sidebar ad – only while landscape */}
-      {isLand && (
-        <aside className="fixed right-0 top-0 w-64 h-screen bg-white text-black shadow-lg p-4 border-l border-gray-300 z-50">
-          <img src={scenario.ad} alt="sponsor" className="w-full rounded mb-2" />
-          <p className="text-xs text-center text-gray-600 mb-1">{scenario.thankYou}</p>
+      {hasVoted && isFlipped && (
+        <div className="ad-container">
+          <FlipAd />
           <a
-            href={FLIP_LINK}
+            href="https://www.instagram.com/flipvertising"
             target="_blank"
-            rel="noreferrer"
-            className="block text-[10px] text-center underline text-emerald-500"
+            rel="noopener noreferrer"
+            className="flipvertising-footer"
           >
             Powered by Flipvertising™
           </a>
-        </aside>
+        </div>
       )}
     </div>
   );
 }
+
+export default App;
