@@ -1,30 +1,31 @@
-/* --------------  src/App.jsx (entire file)  -------------- */
 import React, { useEffect, useState } from "react";
 import { fetchTodayScenario } from "./utils/fetchTodayScenario";
 import logoLight from "/logo-light.png";
-import logoDark  from "/logo-grindset.png";
+import logoDark from "/logo-grindset.png";
 
 export default function App() {
-  const [scenario, setScenario]  = useState(null);
-  const [selected, setSelected]  = useState(null);
-  const [theme,    setTheme]     = useState("cutie");
-  const [loading,  setLoading]   = useState(true);
-  const [error,    setError]     = useState("");
+  const [scenario, setScenario] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [theme, setTheme] = useState("cutie");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isLandscape, setIsLandscape] = useState(
     typeof window !== "undefined" &&
-    (window.innerWidth > 768 || window.innerHeight < window.innerWidth)
+      (window.innerWidth > 768 || window.innerHeight < window.innerWidth)
   );
 
   useEffect(() => {
     fetchTodayScenario()
       .then(setScenario)
-      .catch(err => setError(err.message || "API error"))
+      .catch((err) => setError(err.message || "API error"))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     const handler = () =>
-      setIsLandscape(window.innerWidth > 768 || window.innerHeight < window.innerWidth);
+      setIsLandscape(
+        window.innerWidth > 768 || window.innerHeight < window.innerWidth
+      );
     window.addEventListener("resize", handler);
     window.addEventListener("orientationchange", handler);
     return () => {
@@ -33,16 +34,34 @@ export default function App() {
     };
   }, []);
 
+  // ⬇️ Monetag script injection only in landscape
+  useEffect(() => {
+    let monetagScript;
+    if (isLandscape) {
+      monetagScript = document.createElement("script");
+      monetagScript.src = "https://ligheechoagool.com/88/tag.min.js";
+      monetagScript.async = true;
+      monetagScript.setAttribute("data-zone", "146114");
+      monetagScript.setAttribute("data-cfasync", "false");
+      document.body.appendChild(monetagScript);
+    }
+    return () => {
+      if (monetagScript) {
+        document.body.removeChild(monetagScript);
+      }
+    };
+  }, [isLandscape]);
+
   const isGrind = theme === "grindset";
   const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading…</div>;
-  if (error || !scenario) return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
+  if (loading)
+    return <div className="h-screen flex items-center justify-center">Loading…</div>;
+  if (error || !scenario)
+    return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
 
   return (
     <div className={`${isGrind ? "bg-gray-900 text-white" : "bg-pink-50 text-black"} min-h-screen flex flex-col items-center p-4`}>
-
-      {/* header */}
       <header className="w-full max-w-md mb-4 flex items-center justify-between">
         <img src={isGrind ? logoDark : logoLight} className="h-10" />
         <button
@@ -55,13 +74,11 @@ export default function App() {
         </button>
       </header>
 
-      {/* prompt */}
       <section className={`w-full max-w-md mb-5 p-4 rounded-xl shadow border ${isGrind ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-        <h2 className="font-semibold mb-1">📣 Today’s Scenario</h2>
+        <h2 className="font-semibold mb-1">📢 Today’s Scenario</h2>
         <p>{scenario.prompt}</p>
       </section>
 
-      {/* vote grid OR result */}
       {selected === null ? (
         <div className="grid grid-cols-2 gap-3 w-full max-w-md">
           {scenario.options.map((opt, idx) => (
@@ -72,7 +89,7 @@ export default function App() {
               style={{
                 backgroundImage: `url(${opt.image})`,
                 backgroundSize: "cover",
-                backgroundPosition: "center"
+                backgroundPosition: "center",
               }}
             >
               <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
@@ -99,29 +116,20 @@ export default function App() {
         </div>
       )}
 
-      {/* -------- Flipvertising™ sidebar (landscape) -------- */}
+      {/* Sidebar appears only in landscape */}
       {isLandscape && (
         <aside className="fixed right-0 top-0 w-64 h-screen bg-white shadow-lg p-4 border-l border-gray-300 z-50 text-black">
-          {/* ad creative */}
-          {scenario.ad && (
-            <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />
-          )}
-
-          {/* daily thanks (only landscape) */}
-          <p className="text-xs text-center text-gray-600 mb-1">{scenario.thankYou}</p>
-
-          {/* powered-by tagline */}
+          <p className="text-sm font-medium text-gray-700 mb-2">{scenario.thankYou}</p>
+          <div id="monetag-container" />
           <p className="text-[10px] text-center text-gray-400">
             Powered&nbsp;by&nbsp;<span className="italic">Flipvertising™</span>
           </p>
         </aside>
       )}
 
-      {/* -------- Guilt trip bar (portrait only) -------- */}
+      {/* Guilt Trip at bottom on portrait only */}
       {!isLandscape && (
-        <div className="fixed bottom-0 left-0 right-0 bg-red-100 text-red-600 text-center p-2 text-sm shadow z-50">
-          {scenario.guiltTrip}
-        </div>
+        <p className="mt-6 text-xs text-red-500 italic">{scenario.guiltTrip}</p>
       )}
     </div>
   );
