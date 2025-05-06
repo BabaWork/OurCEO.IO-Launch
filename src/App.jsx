@@ -34,7 +34,7 @@ export default function App() {
     };
   }, []);
 
-  // ⬇️ Monetag script injection only in landscape
+  // Monetag script injection only in landscape
   useEffect(() => {
     let monetagScript;
     if (isLandscape) {
