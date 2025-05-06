@@ -1,14 +1,12 @@
-/* --------------  src/App.jsx (entire file)  -------------- */
 import React, { useEffect, useState } from "react";
 import { fetchTodayScenario } from "./utils/fetchTodayScenario";
 import logoLight from "/logo-light.png";
 import logoDark  from "/logo-grindset.png";
 
 export default function App() {
-  /* ---------- state ---------- */
   const [scenario, setScenario]  = useState(null);
   const [selected, setSelected]  = useState(null);
-  const [theme,    setTheme]     = useState("cutie");  // cutie | grindset
+  const [theme,    setTheme]     = useState("cutie");
   const [loading,  setLoading]   = useState(true);
   const [error,    setError]     = useState("");
   const [isLandscape, setIsLandscape] = useState(
@@ -16,7 +14,6 @@ export default function App() {
     (window.innerWidth > 768 || window.innerHeight < window.innerWidth)
   );
 
-  /* ---------- fetch scenario ---------- */
   useEffect(() => {
     fetchTodayScenario()
       .then(setScenario)
@@ -24,7 +21,6 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  /* ---------- track orientation ---------- */
   useEffect(() => {
     const handler = () =>
       setIsLandscape(window.innerWidth > 768 || window.innerHeight < window.innerWidth);
@@ -36,15 +32,12 @@ export default function App() {
     };
   }, []);
 
-  /* ---------- helpers ---------- */
   const isGrind = theme === "grindset";
   const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
 
-  /* ---------- early returns ---------- */
   if (loading) return <div className="h-screen flex items-center justify-center">Loading…</div>;
   if (error || !scenario) return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
 
-  /* ---------- render ---------- */
   return (
     <div className={`${isGrind ? "bg-gray-900 text-white" : "bg-pink-50 text-black"} min-h-screen flex flex-col items-center p-4`}>
 
@@ -105,25 +98,25 @@ export default function App() {
         </div>
       )}
 
-      {/* -------- Flipvertising™ sidebar -------- */}
+      {/* -------- Flipvertising™ sidebar (landscape) -------- */}
       {isLandscape && (
         <aside className="fixed right-0 top-0 w-64 h-screen bg-white shadow-lg p-4 border-l border-gray-300 z-50 text-black">
-          {/* guilt-trip line */}
           <p className="text-sm font-medium text-red-500 mb-2">{scenario.guiltTrip}</p>
-
-          {/* ad creative */}
           {scenario.ad && (
             <img src={scenario.ad} alt="ad" className="w-full rounded mb-2" />
           )}
-
-          {/* daily thanks */}
           <p className="text-xs text-center text-gray-600 mb-1">{scenario.thankYou}</p>
-
-          {/* powered-by tagline */}
           <p className="text-[10px] text-center text-gray-400">
             Powered&nbsp;by&nbsp;<span className="italic">Flipvertising™</span>
           </p>
         </aside>
+      )}
+
+      {/* -------- Guilt trip bar (portrait) -------- */}
+      {!isLandscape && (
+        <div className="fixed bottom-0 left-0 right-0 bg-red-100 text-red-600 text-center p-2 text-sm shadow z-50">
+          {scenario.guiltTrip}
+        </div>
       )}
     </div>
   );
