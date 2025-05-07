@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { fetchTodayScenario } from "./utils/fetchTodayScenario";
 import logoLight from "/logo-light.png";
 import logoDark from "/logo-grindset.png";
-import PropellerSidebarAd from "./components/PropellerSidebarAd";
 
 export default function App() {
   const [scenario, setScenario] = useState(null);
@@ -35,6 +34,18 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isLandscape) {
+      const adScript = document.createElement("script");
+      adScript.src = "https://vemtoutcheeg.com/400/9300933";
+      adScript.async = true;
+      const adZone = document.getElementById("propeller-sidebar");
+      if (adZone && !adZone.hasChildNodes()) {
+        adZone.appendChild(adScript);
+      }
+    }
+  }, [isLandscape]);
+
   const isGrind = theme === "grindset";
   const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
 
@@ -44,63 +55,81 @@ export default function App() {
     return <div className="p-6 text-red-600">⚠️ {error || "No data"}</div>;
 
   return (
-    <div className={`${isGrind ? "bg-gray-900 text-white" : "bg-pink-50 text-black"} min-h-screen flex flex-col items-center p-4`}>
-      <header className="w-full max-w-md mb-4 flex items-center justify-between">
-        <img src={isGrind ? logoDark : logoLight} className="h-10" />
-        <button
-          onClick={toggleTheme}
-          className={`px-3 py-1 rounded text-sm font-semibold shadow transition ${
-            isGrind ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+    <div
+      className={`${isGrind ? "bg-gray-900 text-white" : "bg-pink-50 text-black"} min-h-screen flex flex-col lg:flex-row p-4`}
+    >
+      {/* ⬅️ Sidebar with optional ad */}
+      <aside className="lg:w-64 w-full mb-4 lg:mb-0 lg:mr-6">
+        <div className="flex items-center justify-between mb-4">
+          <img src={isGrind ? logoDark : logoLight} className="h-10" />
+          <button
+            onClick={toggleTheme}
+            className={`px-3 py-1 rounded text-sm font-semibold shadow transition ${
+              isGrind ? "bg-white text-gray-900" : "bg-gray-900 text-white"
+            }`}
+          >
+            Switch to {isGrind ? "Cutie" : "Grindset"}
+          </button>
+        </div>
+
+        {isLandscape && (
+          <div id="propeller-sidebar" className="mt-4 w-full flex justify-center p-2" />
+        )}
+      </aside>
+
+      {/* 👉 Main content */}
+      <main className="flex-1 max-w-2xl mx-auto">
+        <section
+          className={`mb-5 p-4 rounded-xl shadow border ${
+            isGrind ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
           }`}
         >
-          Switch to {isGrind ? "Cutie" : "Grindset"}
-        </button>
-      </header>
+          <h2 className="font-semibold mb-1"> M-" Today’s Scenario</h2>
+          <p>{scenario.prompt}</p>
+        </section>
 
-      <section className={`w-full max-w-md mb-5 p-4 rounded-xl shadow border ${isGrind ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-        <h2 className="font-semibold mb-1"> M-" Today’s Scenario</h2>
-        <p>{scenario.prompt}</p>
-      </section>
-
-      {selected === null ? (
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-          {scenario.options.map((opt, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelected(idx)}
-              className="relative h-40 rounded-lg overflow-hidden shadow hover:scale-105 transition"
-              style={{
-                backgroundImage: `url(${opt.image})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
-                <span className="text-white text-center text-sm leading-snug">
-                  {opt.text}
-                  <br />
-                  <span className="text-xs opacity-80">{opt.effect}</span>
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center space-y-3 max-w-md">
-          <p className="text-xl font-bold">{scenario.options[selected].effect}</p>
-          <p className="italic text-sm opacity-70">{scenario.options[selected].feedback}</p>
-          <p className="text-green-500 font-medium">{scenario.thankYou}</p>
-          <p className="text-xs opacity-60">
-            Today’s charity:&nbsp;
-            <a href={scenario.charityLink} target="_blank" rel="noreferrer" className="underline">
-              {scenario.charity}
-            </a>
-          </p>
-        </div>
-      )}
-
-      {/* Landscape-only Ad */}
-      <PropellerSidebarAd />
+        {selected === null ? (
+          <div className="grid grid-cols-2 gap-3">
+            {scenario.options.map((opt, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelected(idx)}
+                className="relative h-40 rounded-lg overflow-hidden shadow hover:scale-105 transition"
+                style={{
+                  backgroundImage: `url(${opt.image})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center p-2">
+                  <span className="text-white text-center text-sm leading-snug">
+                    {opt.text}
+                    <br />
+                    <span className="text-xs opacity-80">{opt.effect}</span>
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center space-y-3">
+            <p className="text-xl font-bold">{scenario.options[selected].effect}</p>
+            <p className="italic text-sm opacity-70">{scenario.options[selected].feedback}</p>
+            <p className="text-green-500 font-medium">{scenario.thankYou}</p>
+            <p className="text-xs opacity-60">
+              Today’s charity:&nbsp;
+              <a
+                href={scenario.charityLink}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                {scenario.charity}
+              </a>
+            </p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
