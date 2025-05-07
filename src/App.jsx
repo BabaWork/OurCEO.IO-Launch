@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchTodayScenario } from "./utils/fetchTodayScenario";
 import logoLight from "/logo-light.png";
 import logoDark from "/logo-grindset.png";
+import PropellerSidebarAd from "./components/PropellerSidebarAd";
 
 export default function App() {
   const [scenario, setScenario] = useState(null);
@@ -34,24 +35,6 @@ export default function App() {
     };
   }, []);
 
-  // Monetag script injection only in landscape
-  useEffect(() => {
-    let monetagScript;
-    if (isLandscape) {
-      monetagScript = document.createElement("script");
-      monetagScript.src = "https://ligheechoagool.com/88/tag.min.js";
-      monetagScript.async = true;
-      monetagScript.setAttribute("data-zone", "146114");
-      monetagScript.setAttribute("data-cfasync", "false");
-      document.body.appendChild(monetagScript);
-    }
-    return () => {
-      if (monetagScript) {
-        document.body.removeChild(monetagScript);
-      }
-    };
-  }, [isLandscape]);
-
   const isGrind = theme === "grindset";
   const toggleTheme = () => setTheme(isGrind ? "cutie" : "grindset");
 
@@ -75,7 +58,7 @@ export default function App() {
       </header>
 
       <section className={`w-full max-w-md mb-5 p-4 rounded-xl shadow border ${isGrind ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
-        <h2 className="font-semibold mb-1">📢 Today’s Scenario</h2>
+        <h2 className="font-semibold mb-1"> M-" Today’s Scenario</h2>
         <p>{scenario.prompt}</p>
       </section>
 
@@ -116,21 +99,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Sidebar appears only in landscape */}
-      {isLandscape && (
-        <aside className="fixed right-0 top-0 w-64 h-screen bg-white shadow-lg p-4 border-l border-gray-300 z-50 text-black">
-          <p className="text-sm font-medium text-gray-700 mb-2">{scenario.thankYou}</p>
-          <div id="monetag-container" />
-          <p className="text-[10px] text-center text-gray-400">
-            Powered&nbsp;by&nbsp;<span className="italic">Flipvertising™</span>
-          </p>
-        </aside>
-      )}
-
-      {/* Guilt Trip at bottom on portrait only */}
-      {!isLandscape && (
-        <p className="mt-6 text-xs text-red-500 italic">{scenario.guiltTrip}</p>
-      )}
+      {/* Landscape-only Ad */}
+      <PropellerSidebarAd />
     </div>
   );
 }
